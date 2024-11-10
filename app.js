@@ -5,8 +5,8 @@ const path = require('path');
 const app = express();
 
 // Set EJS sebagai view engine
-app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
 // Folder publik untuk static files
 app.use(express.static(path.join(__dirname, 'public')));

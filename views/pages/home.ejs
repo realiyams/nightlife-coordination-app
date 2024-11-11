@@ -1,6 +1,8 @@
 <!-- views/pages/home.ejs -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
 <h1>Welcome to Nightlife Coordination App</h1>
-<p>Explore the best nightlife spots and plan your night with friends!</p>
+<p style="text-align: center;">Explore the best nightlife spots and plan your night with friends!</p>
 
 <form id="searchForm">
   <label for="city">Enter City:</label>
@@ -8,31 +10,112 @@
   <button type="submit">Search Bars</button>
 </form>
 
-<div id="barsList"></div>
+<div>
 
+</div>
+
+<div id="content">
+  <div id="map"></div>
+  <div id="barsList"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
+  let map; // Inisialisasi variabel map
+  let markers = []; // Array untuk menyimpan semua marker
+
+  // Fungsi untuk menginisialisasi peta
+  function initializeMap(lat = 0, lon = 0, zoom = 2) {
+    // Make the map visible once markers are added
+    document.getElementById('map').style.display = 'block';
+
+    if (map) {
+      map.remove(); // Hapus peta sebelumnya jika ada
+    }
+    map = L.map('map').setView([lat, lon], zoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  }
+
+  // Fungsi untuk menambahkan marker ke peta
+  function addMarkers(bars) {
+
+    // Clear previous markers
+    markers.forEach(marker => {
+      map.removeLayer(marker);
+    });
+    markers = [];
+
+    bars.forEach(bar => {
+      const coordinates = bar.geometry.coordinates;
+      const marker = L.marker([coordinates[1], coordinates[0]]).addTo(map)
+        .bindPopup(`<b>${bar.properties.name || 'Unknown Bar'}</b><br>${bar.properties.address_line1 || ''}`);
+
+      markers.push(marker);
+    });
+
+    if (bars.length > 0) {
+      // Adjust the view to fit all markers
+      const group = new L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.5));
+
+    }
+  }
+
   document.getElementById('searchForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const city = document.getElementById('city').value;
     const barsList = document.getElementById('barsList');
     barsList.innerHTML = "<p>Loading bars...</p>"; // Display loading message
+
     try {
       const response = await fetch(`/places/search?city=${city}`);
       const bars = await response.json();
       console.log(bars);
+
       if (bars.length > 0) {
-        barsList.innerHTML = bars.map(bar => `
-          <div>
-            <h3>${bar.properties.name || 'Unknown Bar'}</h3>
-            <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
-          </div>
-        `).join('');
+        // Ambil koordinat dari bar pertama untuk inisialisasi peta
+        const firstBar = bars[0];
+        const firstCoordinates = firstBar.geometry.coordinates;
+        initializeMap(firstCoordinates[1], firstCoordinates[0], 13); // Inisialisasi peta dengan koordinat pertama
+
+        // Tambahkan semua marker ke peta
+        addMarkers(bars);
+
+        // Tampilkan daftar bar
+        barsList.innerHTML = bars.map((bar, index) => `
+            <div class="bar-item" data-index="${index}">
+              <h3>${bar.properties.name || 'Unknown Bar'}</h3>
+              <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
+              <p><strong>Opening Hours:</strong> ${bar.properties.opening_hours || 'Not available'}</p>
+            </div>
+          `).join('');
+
+        // Tambahkan event listener untuk setiap item bar
+        document.querySelectorAll('.bar-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const index = item.getAttribute('data-index');
+            const bar = bars[index];
+            const coordinates = bar.geometry.coordinates;
+            map.setView([coordinates[1], coordinates[0]], 16); // Fokus pada bar yang dipilih
+            markers[index].openPopup(); // Buka popup marker yang dipilih
+          });
+        });
       } else {
         barsList.innerHTML = "<p>No bars or pubs found for this city.</p>";
+        initializeMap(); // Inisialisasi peta default
       }
     } catch (error) {
       console.error("Error fetching bars:", error);
       barsList.innerHTML = "<p>Failed to load bars. Try again.</p>";
+      initializeMap(); // Inisialisasi peta default
     }
   });
+
+  // Inisialisasi peta default saat halaman pertama kali dibuka
+  // initializeMap();
 </script>

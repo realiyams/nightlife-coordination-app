@@ -1,0 +1,11 @@
+{
+  "watch": [
+    "src",
+    "routes",
+    "views"
+  ],
+  "ext": "js,ejs",
+  "ignore": [
+    "node_modules"
+  ]
+}

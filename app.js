@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const app = express();
+const db = require('./models');  // Import file index.js dari folder models
 
 // Set EJS sebagai view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -10,6 +11,15 @@ app.set('view engine', 'ejs');
 
 // Folder publik untuk static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Sync database
+db.sequelize.sync()
+  .then(() => {
+    console.log('Database synced successfully');
+  })
+  .catch(err => {
+    console.error('Failed to sync database:', err);
+  });
 
 // Routes
 const indexRoutes = require('./routes/index');

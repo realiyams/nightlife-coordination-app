@@ -5,6 +5,10 @@ const path = require('path');
 const app = express();
 const db = require('./models');  // Import file index.js dari folder models
 
+// Menggunakan express.json() dan express.urlencoded() untuk parsing request body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Set EJS sebagai view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');

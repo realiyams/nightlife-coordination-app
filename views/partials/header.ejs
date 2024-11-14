@@ -5,9 +5,10 @@
     <div>
       <% if (user && user.username) { %>
         <span>Welcome, <%= user.username %>!</span>
+        <<%= user %>
         <a href="/logout">Logout</a>
       <% } else { %>
-        <a href="/login">Login</a>
+        <a href="/login"><%= user %> Login</a>
       <% } %>
     </div>
   </nav>

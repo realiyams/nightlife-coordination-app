@@ -66,11 +66,15 @@ router.get('/', optionalAuthenticateToken, (req, res) => {
 });
 
 router.get('/login', ensureNotAuthenticated, (req, res) => {
+  const errorMessage = req.flash('error');
+  const successMessage = req.flash('success');
+
   res.render('layouts/layout', {
     title: 'Login',
-    errorMessage: null,
+    errorMessage: errorMessage.length > 0 ? errorMessage[0] : null,
+    successMessage: successMessage.length > 0 ? successMessage[0] : null,
     body: '../pages/login',
-    user: req.user || null // Pass user as null if not logged in
+    user: req.user || null
   });
 });
 
@@ -80,67 +84,47 @@ router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { username } });
 
-    if (!user) {
-      return res.status(401).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Invalid username or password' });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      // Set flash message for invalid login
+      req.flash('error', 'Invalid username or password');
+      return res.redirect('/login'); // Redirect to login page
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (isMatch) {
-      const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
-      res.cookie('token', token, { httpOnly: true, maxAge: 3600000 }); // Set token as httpOnly cookie for 1 hour
-      res.redirect('/'); // Redirect to home
-    } else {
-      res.status(401).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Invalid username or password' });
-    }
+    // Generate token and set cookie if login is successful
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+    res.cookie('token', token, { httpOnly: true, maxAge: 3600000 });
+    res.redirect('/');
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Something went wrong' });
+    req.flash('error', 'Something went wrong');
+    res.redirect('/login');
   }
 });
 
-
 router.post('/logout', (req, res) => {
-  res.clearCookie('token'); // Menghapus cookie token
-  res.redirect('/'); // Kembali ke halaman utama atau login
-});
-
-// Menampilkan form registrasi
-router.get('/register', ensureNotAuthenticated, (req, res) => {
-  res.render('layouts/layout', {
-    title: 'Register', body: '../pages/register', error: null,
-    user: req.user || null // Pass user as null if not logged in
-  });
+  res.clearCookie('token');
+  req.flash('success', 'You have been logged out.');
+  res.redirect('/login');
 });
 
 // Menangani proses registrasi
 router.post('/register', async (req, res) => {
   const { username, firstName, lastName, password, confirmPassword } = req.body;
 
-  // Validasi password dan konfirmasi password
   if (password !== confirmPassword) {
-    return res.render('layouts/layout', {
-      title: 'Register',
-      body: '../pages/register',
-      error: 'Password and confirm password do not match'
-    });
+    req.flash('error', 'Password and confirm password do not match');
+    return res.redirect('/register'); // Redirect kembali ke halaman registrasi
   }
 
   try {
-    // Cek apakah username sudah ada
     const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
-      return res.render('layouts/layout', {
-        title: 'Register',
-        body: '../pages/register',
-        error: 'Username already exists'
-      });
+      req.flash('error', 'Username already exists');
+      return res.redirect('/register');
     }
 
-    // Enkripsi password sebelum disimpan
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Buat user baru
     await User.create({
       username,
       firstName,
@@ -148,19 +132,39 @@ router.post('/register', async (req, res) => {
       password: hashedPassword
     });
 
-    // Redirect ke halaman login setelah sukses registrasi
-    res.redirect('/login');
+    req.flash('success', 'Registration successful! Please log in.');
+    res.redirect('/login'); // Redirect ke halaman login dengan pesan sukses
   } catch (error) {
     console.error(error);
-    res.render('layouts/layout', {
-      title: 'Register',
-      body: '../pages/register',
-      error: 'Something went wrong. Please try again.'
-    });
+    req.flash('error', 'Something went wrong. Please try again.');
+    res.redirect('/register');
   }
 });
 
+// Modifikasi GET /register route untuk mengambil flash message
+router.get('/register', ensureNotAuthenticated, (req, res) => {
+  const errorMessage = req.flash('error');
+  const successMessage = req.flash('success');
+
+  res.render('layouts/layout', {
+    title: 'Register',
+    body: '../pages/register',
+    error: errorMessage.length > 0 ? errorMessage[0] : null,
+    success: successMessage.length > 0 ? successMessage[0] : null,
+    user: req.user || null
+  });
+});
+
+
 // Endpoint untuk mencari bar dan pub berdasarkan nama kota
 router.get('/places/search', placesController.getBarsAndPubs);
+
+router.get('/protected', authenticateToken, (req, res) => {
+  res.render('layouts/layout', {
+    title: 'Protected Page',
+    body: '../pages/protected',
+    user: req.user
+  });
+});
 
 module.exports = router;

@@ -1,9 +1,22 @@
 // app.js
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
+const flash = require('connect-flash');
 const path = require('path');
 const app = express();
 const db = require('./models');  // Import file index.js dari folder models
+
+// Set up session middleware
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 60000 } // Cookie expires after 1 minute
+}));
+
+// Set up flash middleware
+app.use(flash());
 
 // Menggunakan express.json() dan express.urlencoded() untuk parsing request body
 app.use(express.json());

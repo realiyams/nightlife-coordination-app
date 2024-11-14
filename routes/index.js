@@ -6,6 +6,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models').User;
 
+// Secret key untuk JWT (simpan ini di environment variable, bukan di kode)
+const JWT_SECRET = 'your-secret-key';
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -29,71 +32,85 @@ function optionalAuthenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    req.user = null; // Set req.user ke null jika tidak ada token
+    req.user = null; // Set req.user to null if there's no token
     return next();
   }
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      req.user = null; // Jika token tidak valid, set req.user ke null
+      req.user = null; // If the token is invalid, set req.user to null
       return next();
     }
 
-    req.user = user; // Simpan data user di request jika token valid
+    req.user = user; // Set the user data if the token is valid
     next();
   });
 }
 
 
+function ensureNotAuthenticated(req, res, next) {
+  if (req.user) {
+    return res.redirect('/'); // Redirect to home page if the user is logged in
+  }
+  next(); // Proceed if the user is not logged in
+}
 
 // Halaman utama
 router.get('/', optionalAuthenticateToken, (req, res) => {
-  res.render('layouts/layout', { title: 'Nightlife Coordination', body: '../pages/home', user: req.user });
+  // Pass 'user' from the request to the view, which can be null if not logged in
+  res.render('layouts/layout', {
+    title: 'Nightlife Coordination',
+    body: '../pages/home',
+    user: req.user // If the user is logged in, req.user will contain the user object, otherwise it will be null
+  });
 });
 
-router.get('/login', (req, res) => {
-  res.render('layouts/layout', { title: 'Login', errorMessage: null, body: '../pages/login' });
+router.get('/login', ensureNotAuthenticated, (req, res) => {
+  res.render('layouts/layout', {
+    title: 'Login',
+    errorMessage: null,
+    body: '../pages/login',
+    user: req.user || null // Pass user as null if not logged in
+  });
 });
-
-// Secret key untuk JWT (simpan ini di environment variable, bukan di kode)
-const JWT_SECRET = 'your-secret-key';
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Cari user berdasarkan username
     const user = await User.findOne({ where: { username } });
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+      return res.status(401).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Invalid username or password' });
     }
 
-    // Bandingkan password yang dimasukkan dengan hash di database
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch) {
-      // Buat JWT token jika login berhasil
-      const token = jwt.sign(
-        { id: user.id, username: user.username },
-        JWT_SECRET,
-        { expiresIn: '1h' } // Token berlaku selama 1 jam
-      );
-
-      // Kirim token ke frontend
-      res.json({ token });
+      const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+      res.cookie('token', token, { httpOnly: true, maxAge: 3600000 }); // Set token as httpOnly cookie for 1 hour
+      res.redirect('/'); // Redirect to home
     } else {
-      res.status(401).json({ message: 'Invalid username or password' });
+      res.status(401).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Invalid username or password' });
     }
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Something went wrong' });
+    res.status(500).render('layouts/layout', { title: 'Login', body: '../pages/login', message: 'Something went wrong' });
   }
 });
 
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token'); // Menghapus cookie token
+  res.redirect('/'); // Kembali ke halaman utama atau login
+});
+
 // Menampilkan form registrasi
-router.get('/register', (req, res) => {
-  res.render('layouts/layout', { title: 'Register', body: '../pages/register', error: null });
+router.get('/register', ensureNotAuthenticated, (req, res) => {
+  res.render('layouts/layout', {
+    title: 'Register', body: '../pages/register', error: null,
+    user: req.user || null // Pass user as null if not logged in
+  });
 });
 
 // Menangani proses registrasi

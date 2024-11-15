@@ -49,19 +49,18 @@ function optionalAuthenticateToken(req, res, next) {
 
 
 function ensureNotAuthenticated(req, res, next) {
-  if (req.user) {
+  if (req.session.user) {
     return res.redirect('/'); // Redirect to home page if the user is logged in
   }
   next(); // Proceed if the user is not logged in
 }
 
 // Halaman utama
-router.get('/', optionalAuthenticateToken, (req, res) => {
-  // Pass 'user' from the request to the view, which can be null if not logged in
+router.get('/', (req, res) => {
   res.render('layouts/layout', {
     title: 'Nightlife Coordination',
     body: '../pages/home',
-    user: req.user // If the user is logged in, req.user will contain the user object, otherwise it will be null
+    user: req.session.user || null // Access user from session
   });
 });
 
@@ -74,7 +73,7 @@ router.get('/login', ensureNotAuthenticated, (req, res) => {
     errorMessage: errorMessage.length > 0 ? errorMessage[0] : null,
     successMessage: successMessage.length > 0 ? successMessage[0] : null,
     body: '../pages/login',
-    user: req.user || null
+    user: null
   });
 });
 
@@ -85,14 +84,16 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ where: { username } });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      // Set flash message for invalid login
       req.flash('error', 'Invalid username or password');
-      return res.redirect('/login'); // Redirect to login page
+      return res.redirect('/login');
     }
 
-    // Generate token and set cookie if login is successful
     const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
     res.cookie('token', token, { httpOnly: true, maxAge: 3600000 });
+    
+    // Store user in session
+    req.session.user = { id: user.id, username: user.username };
+
     res.redirect('/');
   } catch (error) {
     console.error('Login error:', error);
@@ -102,10 +103,16 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
-  req.flash('success', 'You have been logged out.');
-  res.redirect('/login');
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.redirect('/');
+    }
+    res.clearCookie('token'); // Optional if you’re using cookies for authentication
+    res.redirect('/'); // Redirect to login page after logout
+  });
 });
+
 
 // Menangani proses registrasi
 router.post('/register', async (req, res) => {
@@ -151,20 +158,11 @@ router.get('/register', ensureNotAuthenticated, (req, res) => {
     body: '../pages/register',
     error: errorMessage.length > 0 ? errorMessage[0] : null,
     success: successMessage.length > 0 ? successMessage[0] : null,
-    user: req.user || null
+    user: req.session.user || null
   });
 });
-
 
 // Endpoint untuk mencari bar dan pub berdasarkan nama kota
 router.get('/places/search', placesController.getBarsAndPubs);
-
-router.get('/protected', authenticateToken, (req, res) => {
-  res.render('layouts/layout', {
-    title: 'Protected Page',
-    body: '../pages/protected',
-    user: req.user
-  });
-});
 
 module.exports = router;

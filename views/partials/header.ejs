@@ -3,12 +3,18 @@
     <a href="/">Home</a>
     <!-- Tambahkan link navigasi lainnya di sini -->
     <div>
+      <%= JSON.stringify(user) %>
+
       <% if (user && user.username) { %>
         <span>Welcome, <%= user.username %>!</span>
-        <<%= user %>
-        <a href="/logout">Logout</a>
+        <!-- Form for logout -->
+        <form action="/logout" method="POST" style="display:inline;">
+          <button type="submit" style="background:none; border:none; color:blue; cursor:pointer;">
+            Logout
+          </button>
+        </form>
       <% } else { %>
-        <a href="/login"><%= user %> Login</a>
+        <a href="/login">Login</a>
       <% } %>
     </div>
   </nav>

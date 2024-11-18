@@ -3,16 +3,16 @@ module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
     firstName: {
       type: DataTypes.STRING,
-      allowNull: false, // Nama depan harus diisi
+      allowNull: false,
     },
     lastName: {
       type: DataTypes.STRING,
-      allowNull: false, // Nama belakang harus diisi
+      allowNull: false,
     },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // Membuat username unik
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -20,14 +20,18 @@ module.exports = (sequelize, DataTypes) => {
     },
     city: {
       type: DataTypes.STRING,
-      allowNull: true, // Boleh kosong jika city tidak diberikan
+      allowNull: true,
     },
   }, {
-    timestamps: true, // Menambahkan kolom createdAt dan updatedAt
+    timestamps: true,
   });
 
   User.associate = function (models) {
-    // Define associations here jika ada relasi dengan model lain
+    User.belongsToMany(models.Bar, {
+      through: models.UserBar,
+      foreignKey: 'user_id',
+      otherKey: 'place_id',
+    });
   };
 
   return User;

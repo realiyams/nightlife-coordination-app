@@ -1,4 +1,3 @@
-<!-- views/pages/home.ejs -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
 <h1>Welcome to Nightlife Coordination App</h1>
@@ -11,7 +10,12 @@
 </form>
 
 <div>
-
+  <!-- Header with user info -->
+  <% if (user && user.username) { %>
+    <div id="user-info" data-id="<%= user.id %>" data-username="<%= user.username %>" data-logged-in="true"></div>
+    <% } else { %>
+      <div id="user-info" data-logged-in="false"></div>
+      <% } %>
 </div>
 
 <div id="content">
@@ -42,7 +46,6 @@
 
   // Fungsi untuk menambahkan marker ke peta
   function addMarkers(bars) {
-
     // Clear previous markers
     markers.forEach(marker => {
       map.removeLayer(marker);
@@ -61,7 +64,6 @@
       // Adjust the view to fit all markers
       const group = new L.featureGroup(markers);
       map.fitBounds(group.getBounds().pad(0.5));
-
     }
   }
 
@@ -88,12 +90,53 @@
 
         // Tampilkan daftar bar
         barsList.innerHTML = bars.map((bar, index) => `
-            <div class="bar-item" data-index="${index}">
-              <h3>${bar.properties.name || 'Unknown Bar'}</h3>
-              <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
-              <p><strong>Opening Hours:</strong> ${bar.properties.opening_hours || 'Not available'}</p>
-            </div>
-          `).join('');
+        <div class="bar-item" data-index="${index}">
+          <h3>${bar.properties.name || 'Unknown Bar'}</h3>
+          <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
+          <p><strong>Opening Hours:</strong> ${bar.properties.opening_hours || 'Not available'}</p>
+          <button class="go-there-btn" data-index="${index}" style="display: none;">Go There</button>
+          <button class="remove-btn" data-index="${index}" style="display: none;">Remove</button>
+        </div>
+      `).join('');
+
+        // Ambil status login pengguna
+        const userInfo = document.getElementById('user-info');
+        const isLoggedIn = userInfo.getAttribute('data-logged-in') === 'true';
+
+        if (isLoggedIn) {
+          // Hanya tampilkan tombol "Go There" dan "Remove" untuk pengguna yang login
+          document.querySelectorAll('.go-there-btn').forEach(btn => {
+            btn.style.display = 'inline';
+          });
+        }
+
+        // Event listener untuk tombol "Go There"
+        document.querySelectorAll('.go-there-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const index = btn.getAttribute('data-index');
+            const bar = bars[index];
+            const coordinates = bar.geometry.coordinates;
+
+            // Fokus pada bar di peta
+            map.setView([coordinates[1], coordinates[0]], 16);
+            markers[index].openPopup();
+
+            // Tampilkan tombol "Remove" dan sembunyikan "Go There"
+            btn.style.display = 'none';
+            document.querySelector(`.remove-btn[data-index="${index}"]`).style.display = 'inline';
+          });
+        });
+
+        // Event listener untuk tombol "Remove"
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const index = btn.getAttribute('data-index');
+
+            // Tampilkan tombol "Go There" dan sembunyikan "Remove"
+            btn.style.display = 'none';
+            document.querySelector(`.go-there-btn[data-index="${index}"]`).style.display = 'inline';
+          });
+        });
 
         // Tambahkan event listener untuk setiap item bar
         document.querySelectorAll('.bar-item').forEach(item => {

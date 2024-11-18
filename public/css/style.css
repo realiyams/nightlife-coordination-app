@@ -131,3 +131,11 @@ button:hover {
   color: red;
   margin-top: 10px;
 }
+
+.go-there-btn, .remove-btn {
+  margin: 5px 0;
+}
+
+.bar-item button {
+  cursor: pointer;
+}

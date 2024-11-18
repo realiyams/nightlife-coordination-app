@@ -1,10 +1,7 @@
 <header>
   <nav>
     <a href="/">Home</a>
-    <!-- Tambahkan link navigasi lainnya di sini -->
     <div>
-      <!-- <%= JSON.stringify(user) %> -->
-
       <% if (user && user.username) { %>
         <span>Welcome, <%= user.username %>!</span>
         <!-- Form for logout -->
@@ -13,9 +10,13 @@
             Logout
           </button>
         </form>
-      <% } else { %>
-        <a href="/login">Login</a>
-      <% } %>
+        <!-- Menyimpan data id dan username dalam data attribute -->
+        <div id="user-info" data-id="<%= user.id %>" data-username="<%= user.username %>" data-logged-in="true"></div>
+        <% } else { %>
+          <a href="/login">Login</a>
+          <!-- Menyimpan status login dalam data attribute -->
+          <div id="user-info" data-logged-in="false"></div>
+          <% } %>
     </div>
   </nav>
 </header>

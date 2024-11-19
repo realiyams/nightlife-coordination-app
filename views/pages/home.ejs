@@ -101,6 +101,8 @@
 
         // Ambil status login pengguna
         const userInfo = document.getElementById('user-info');
+        const userId = userInfo.getAttribute('data-id');
+        const username = userInfo.getAttribute('data-username');
         const isLoggedIn = userInfo.getAttribute('data-logged-in') === 'true';
 
         if (isLoggedIn) {
@@ -112,7 +114,7 @@
 
         // Event listener untuk tombol "Go There"
         document.querySelectorAll('.go-there-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', async () => {
             const index = btn.getAttribute('data-index');
             const bar = bars[index];
             const coordinates = bar.geometry.coordinates;
@@ -120,6 +122,45 @@
             // Fokus pada bar di peta
             map.setView([coordinates[1], coordinates[0]], 16);
             markers[index].openPopup();
+
+            try {
+              const response = await fetch('/places/go-there', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  userId,
+                  username,
+                  bar: {
+                    place_id: bar.properties.place_id || '', // ID unik
+                    name: bar.properties.name || 'Unknown Bar', // Nama bar
+                    country: bar.properties.country || '', // Negara
+                    state: bar.properties.state || '', // Provinsi/State
+                    city: bar.properties.city || '', // Kota
+                    postcode: bar.properties.postcode || '', // Kode Pos
+                    coordinates: {
+                      lat: coordinates[1],
+                      lon: coordinates[0]
+                    },
+                    formatted: bar.properties.formatted || '', // Alamat lengkap
+                    categories: bar.properties.categories || [], // Kategori
+                    details: bar.properties.details || [], // Detail tambahan
+                    opening_hours: bar.properties.opening_hours || '', // Jam operasional
+
+                  }
+                })
+              });
+
+              if (response.ok) {
+                console.log("Location successfully sent!");
+                // Tampilkan konfirmasi atau aksi lainnya
+              } else {
+                console.error("Failed to send location:", response.statusText);
+              }
+            } catch (error) {
+              console.error("Error sending location:", error);
+            }
 
             // Tampilkan tombol "Remove" dan sembunyikan "Go There"
             btn.style.display = 'none';

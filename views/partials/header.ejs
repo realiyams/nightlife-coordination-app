@@ -1,22 +1,24 @@
-<header>
-  <nav>
-    <a href="/">Home</a>
-    <div>
+<link rel="stylesheet" href="/css/header.css" type="text/css">
+
+<header id="header">
+  <nav id="navigation">
+    <a href="/" id="logo">Home</a>
+    <div id="user-info-container">
       <% if (user && user.username) { %>
-        <span>Welcome, <%= user.username %>!</span>
-        <!-- Form for logout -->
-        <form action="/logout" method="POST" style="display:inline;">
-          <button type="submit" style="background:none; border:none; color:blue; cursor:pointer;">
-            Logout
-          </button>
-        </form>
-        <!-- Menyimpan data id dan username dalam data attribute -->
+        <div id="dropdown">
+          <button id="dropdown-btn">Welcome, <%= user.username %>!</button>
+          <div id="dropdown-content">
+            <a href="/profile" id="profile">Profile</a>
+            <form action="/logout" method="POST" id="logout-form">
+              <button type="submit" id="logout-btn">Logout</button>
+            </form>
+          </div>
+        </div>
         <div id="user-info" data-id="<%= user.id %>" data-username="<%= user.username %>" data-logged-in="true"></div>
-        <% } else { %>
-          <a href="/login">Login</a>
-          <!-- Menyimpan status login dalam data attribute -->
-          <div id="user-info" data-logged-in="false"></div>
-          <% } %>
+      <% } else { %>
+        <a href="/login" id="login">Login</a>
+        <div id="user-info" data-logged-in="false"></div>
+      <% } %>
     </div>
   </nav>
 </header>

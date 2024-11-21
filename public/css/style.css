@@ -6,25 +6,6 @@ body {
   background-color: #f4f4f9;
 }
 
-header {
-  background-color: #333;
-  color: #fff;
-  padding: 1rem;
-  border-radius: 10px;
-}
-
-nav {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-nav a {
-  color: #fff;
-  margin-right: 1rem;
-  text-decoration: none;
-}
-
 h1 {
   text-align: center;
 }

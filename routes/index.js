@@ -18,4 +18,7 @@ router.post('/places/go-there', placesController.handleGoThere);
 
 // Rute untuk menangani POST request dari tombol "Remove"
 router.post('/places/remove', placesController.removePlace);
+
+// Rute untuk menangani POST request untuk "search"
+router.post('/user/updateCity', placesController.updateCity);
 module.exports = router;

@@ -1,30 +1,47 @@
-<div class="container">
-  <h2>Register</h2>
-  <% if (error) { %>
-    <p style="color:red;"><%= error %></p>
-  <% } %>
-  <form action="/register" method="POST">
-    <div class="form-group">
-      <label for="firstName">First Name</label>
-      <input type="text" name="firstName" id="firstName" required />
+<link rel="stylesheet" href="/css/register.css">
+
+<div id="center-container">
+  <div id="register-container">
+    <h2 id="register-title">Register</h2>
+
+    <% if (error) { %>
+      <p id="register-error-message"><%= error %></p>
+    <% } %>
+
+    <form id="register-form" action="/register" method="POST">
+      <div id="form-sections">
+        <!-- Left section -->
+        <div id="left-section">
+          <label for="firstName" id="first-name-label">First Name</label>
+          <input type="text" id="first-name" name="firstName" required />
+
+          <label for="lastName" id="last-name-label">Last Name</label>
+          <input type="text" id="last-name" name="lastName" required />
+
+          <label for="username" id="username-label">Username</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+
+        <!-- Right section -->
+        <div id="right-section">
+          <label for="password" id="password-label">Password</label>
+          <input type="password" id="password" name="password" required />
+
+          <label for="confirmPassword" id="confirm-password-label">Confirm Password</label>
+          <input type="password" id="confirm-password" name="confirmPassword" required />
+
+          <button type="submit" id="register-button">Register</button>
+        </div>
+      </div>
+    </form>
+
+    <div id="login-suggestion">
+      <p>Doesn't feel like registering?</p>
+      <div class="credentials">
+        <p><strong>Username:</strong> username</p>
+        <p><strong>Password:</strong> password</p>
+      </div>
+      <a id="login-link" href="/login">Login</a>
     </div>
-    <div class="form-group">
-      <label for="lastName">Last Name</label>
-      <input type="text" name="lastName" id="lastName" required />
-    </div>
-    <div class="form-group">
-      <label for="username">Username</label>
-      <input type="text" name="username" id="username" required />
-    </div>
-    <div class="form-group">
-      <label for="password">Password</label>
-      <input type="password" name="password" id="password" required />
-    </div>
-    <div class="form-group">
-      <label for="confirmPassword">Confirm Password</label>
-      <input type="password" name="confirmPassword" id="confirmPassword" required />
-    </div>
-    <button type="submit">Register</button>
-  </form>
-  <p>Already have an account? <a href="/login">Login here</a></p>
+  </div>
 </div>

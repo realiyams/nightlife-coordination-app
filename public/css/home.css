@@ -1,0 +1,115 @@
+h1 {
+  text-align: center;
+  color: #333;
+  margin: 20px 0;
+}
+
+p {
+  text-align: center;
+  color: #666;
+}
+
+#searchForm {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+#searchForm label {
+  margin-right: 10px;
+}
+
+#city {
+  padding: 5px;
+  font-size: 16px;
+}
+
+#searchForm button {
+  padding: 5px 10px;
+  font-size: 16px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+#searchForm button:hover {
+  background-color: #0056b3;
+}
+
+#content {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  margin-top: 20px;
+  height: 400px; /* Sesuaikan tinggi sesuai kebutuhan */
+}
+
+/* Gaya untuk peta */
+#map {
+  width: 60%; /* Peta mengambil 60% dari lebar container */
+  height: 100%;
+  border: 1px solid #ccc;
+}
+
+/* Gaya untuk daftar bar */
+#barsList {
+  width: 40%; /* Daftar bar mengambil 35% dari lebar container */
+  /* height: 100%; */
+  overflow-y: auto; /* Menambahkan scroll vertikal */
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  padding: 10px;
+}
+
+.bar-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center; /* Menjadikan isi bar-item berada di tengah */
+}
+
+.bar-item h3 {
+  margin: 0 0 5px;
+}
+
+.bar-item p {
+  margin: 0 0 10px;
+}
+
+.go-there-btn,
+.remove-btn {
+  display: inline-block;
+  margin: 10px auto 0; /* Menambahkan margin atas dan tengah */
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center; /* Menjadikan teks pada tombol berada di tengah */
+  border-radius: 5px;
+}
+
+/* Gaya untuk tombol "Plan to Visit" */
+.go-there-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+}
+
+.go-there-btn:hover {
+  background-color: #218838;
+}
+
+/* Gaya untuk tombol "Cancel Plan" */
+.remove-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+}
+
+.remove-btn:hover {
+  background-color: #c82333;
+}

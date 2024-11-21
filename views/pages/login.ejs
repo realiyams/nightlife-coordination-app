@@ -1,18 +1,24 @@
-<!-- views/login.ejs -->
-<div class="login-container">
-  <h2>Login</h2>
-  <form id="loginForm" method="POST" action="/login">
-    <label for="username">Username</label>
-    <input type="text" id="username" name="username" required>
+<link rel="stylesheet" href="/css/login.css">
 
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required>
+<div id="center-container">
+  <div id="login-container">
+    <h2 id="login-title">Login</h2>
+    <form id="login-form" method="POST" action="/login">
+      <label for="username" id="username-label">Username</label>
+      <input type="text" id="username" name="username" required>
 
-    <button type="submit">Login</button>
-  </form>
-  <% if (errorMessage) { %>
-    <p id="error-message" class="error-message"><%= errorMessage %></p>
-  <% } %>
+      <label for="password" id="password-label">Password</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit" id="login-button">Login</button>
+    </form>
+    <% if (errorMessage) { %>
+      <p id="login-error-message">
+        <%= errorMessage %>
+      </p>
+      <% } %>
+  </div>
+
+  <a id="register-link" href="/register">Register</a>
+
 </div>
-
-<a href="/register">register</a>

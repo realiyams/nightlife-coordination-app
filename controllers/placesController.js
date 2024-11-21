@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { Bar, UserBar } = require('../models'); // Impor model Bar dan UserBar
+const { User, Bar, UserBar } = require('../models'); // Impor model Bar dan UserBar
 
 exports.getBarsAndPubs = async (req, res) => {
   const { city, userId } = req.query;
@@ -150,6 +150,34 @@ exports.removePlace = async (req, res) => {
   } catch (error) {
     console.error("Error removing relationship:", error);
     return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+exports.updateCity = async (req, res) => {
+  const { userId, city } = req.body;
+
+  try {
+    // Check if the city and userId are provided
+    if (!userId || !city) {
+      return res.status(400).json({ error: 'User ID and city are required.' });
+    }
+
+    // Find the user by userId
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    // Update the city in the User model
+    user.city = city;
+    await user.save();
+
+    // Return success response
+    res.status(200).json({ message: 'City updated successfully.' });
+  } catch (error) {
+    console.error('Error updating city:', error);
+    res.status(500).json({ error: 'Failed to update city.' });
   }
 };
 

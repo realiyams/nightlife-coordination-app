@@ -16,4 +16,6 @@ router.get('/places/search', placesController.getBarsAndPubs);
 // Rute untuk menangani POST request dari tombol "Go There"
 router.post('/places/go-there', placesController.handleGoThere);
 
+// Rute untuk menangani POST request dari tombol "Remove"
+router.post('/places/remove', placesController.removePlace);
 module.exports = router;

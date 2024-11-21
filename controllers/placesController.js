@@ -2,7 +2,7 @@ const axios = require('axios');
 const { Bar, UserBar } = require('../models'); // Impor model Bar dan UserBar
 
 exports.getBarsAndPubs = async (req, res) => {
-  const { city } = req.query;
+  const { city, userId } = req.query;
 
   if (!city) {
     return res.status(400).json({ error: "City name is required." });
@@ -15,8 +15,8 @@ exports.getBarsAndPubs = async (req, res) => {
     const geoResponse = await axios.get(`https://api.geoapify.com/v1/geocode/search`, {
       params: {
         text: city,
-        apiKey: apiKey
-      }
+        apiKey: apiKey,
+      },
     });
 
     if (!geoResponse.data.features || geoResponse.data.features.length === 0) {
@@ -32,12 +32,34 @@ exports.getBarsAndPubs = async (req, res) => {
         categories: "catering.bar,catering.pub",
         filter: `circle:${lon},${lat},5000`, // Radius 5000 meter
         limit: 10,
-        apiKey: apiKey
-      }
+        apiKey: apiKey,
+      },
     });
 
-    // Kirim hasil dalam format JSON
-    res.json(placeResponse.data.features);
+    const bars = placeResponse.data.features;
+
+    if (userId) {
+      const userBars = await UserBar.findAll({
+        where: {
+          user_id: userId,
+          place_id: bars.map(bar => bar.properties.place_id),
+        },
+      });
+
+      // Ekstrak semua place_id dari userBars
+      const userBarPlaceIds = userBars.map(userBar => userBar.place_id);
+
+      // Perbarui status planToGo untuk bar yang cocok
+      bars.forEach(bar => {
+        bar.properties.planToGo = userBarPlaceIds.includes(bar.properties.place_id);
+        if (bar.properties.planToGo) {
+          console.log(bar.properties.place_id);
+        }
+      });
+    }
+
+    // Kirimkan respons
+    res.json(bars);
 
   } catch (error) {
     console.error("Error fetching data from Geoapify:", error);
@@ -48,10 +70,10 @@ exports.getBarsAndPubs = async (req, res) => {
 exports.handleGoThere = async (req, res) => {
   const { userId, username, bar } = req.body;
 
-  console.log("User Location Request:");
-  console.log("User ID:", userId);
-  console.log("Username:", username);
-  console.log("Bar Details:", bar);
+  // console.log("User Location Request:");
+  // console.log("User ID:", userId);
+  // console.log("Username:", username);
+  // console.log("Bar Details:", bar);
 
   try {
     // Cek apakah data bar sudah ada
@@ -106,4 +128,28 @@ exports.handleGoThere = async (req, res) => {
   }
 };
 
+exports.removePlace = async (req, res) => {
+  const { userId, placeId } = req.body;
+
+  try {
+    // Hapus hubungan berdasarkan userId dan placeId
+    const result = await UserBar.destroy({
+      where: {
+        user_id: userId,
+        place_id: placeId,
+      },
+    });
+
+    if (result) {
+      console.log("User-Bar relationship removed from the database.");
+      return res.status(200).json({ message: "Relationship successfully removed." });
+    } else {
+      console.log("User-Bar relationship not found.");
+      return res.status(404).json({ message: "Relationship not found." });
+    }
+  } catch (error) {
+    console.error("Error removing relationship:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
 

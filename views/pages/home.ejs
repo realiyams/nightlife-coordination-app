@@ -72,10 +72,13 @@
 
     const city = document.getElementById('city').value;
     const barsList = document.getElementById('barsList');
+    const userId = document.getElementById('user-info').getAttribute('data-id') || null;
     barsList.innerHTML = "<p>Loading bars...</p>"; // Display loading message
 
     try {
-      const response = await fetch(`/places/search?city=${city}`);
+      // Kirim permintaan dengan `userId` jika tersedia
+      const query = userId ? `city=${city}&userId=${userId}` : `city=${city}`;
+      const response = await fetch(`/places/search?${query}`);
       const bars = await response.json();
       console.log(bars);
 
@@ -88,29 +91,30 @@
         // Tambahkan semua marker ke peta
         addMarkers(bars);
 
-        // Tampilkan daftar bar
-        barsList.innerHTML = bars.map((bar, index) => `
-        <div class="bar-item" data-index="${index}">
-          <h3>${bar.properties.name || 'Unknown Bar'}</h3>
-          <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
-          <p><strong>Opening Hours:</strong> ${bar.properties.opening_hours || 'Not available'}</p>
-          <button class="go-there-btn" data-index="${index}" style="display: none;">Go There</button>
-          <button class="remove-btn" data-index="${index}" style="display: none;">Remove</button>
-        </div>
-      `).join('');
-
         // Ambil status login pengguna
         const userInfo = document.getElementById('user-info');
         const userId = userInfo.getAttribute('data-id');
         const username = userInfo.getAttribute('data-username');
         const isLoggedIn = userInfo.getAttribute('data-logged-in') === 'true';
 
-        if (isLoggedIn) {
-          // Hanya tampilkan tombol "Go There" dan "Remove" untuk pengguna yang login
-          document.querySelectorAll('.go-there-btn').forEach(btn => {
-            btn.style.display = 'inline';
-          });
-        }
+        // Tampilkan daftar bar
+        barsList.innerHTML = bars.map((bar, index) => {
+          const planToGo = bar.properties.planToGo; // Assumes `planToGo` is a property in the `bar` object
+
+          return `
+    <div class="bar-item" data-index="${index}">
+      <h3>${bar.properties.name || 'Unknown Bar'}</h3>
+      <p>${bar.properties.address_line1 || ''}, ${bar.properties.city || ''}</p>
+      <p><strong>Opening Hours:</strong> ${bar.properties.opening_hours || 'Not available'}</p>
+      
+      <!-- Go There button -->
+      <button class="go-there-btn" data-index="${index}" style="${isLoggedIn ? (planToGo ? 'display: none;' : 'display: inline;') : 'display: none;'}">Go There</button>
+      
+      <!-- Remove button -->
+      <button class="remove-btn" data-index="${index}" style="${isLoggedIn ? (planToGo ? 'display: inline;' : 'display: none;') : 'display: none;'}">Remove</button>
+    </div>
+  `;
+        }).join('');
 
         // Event listener untuk tombol "Go There"
         document.querySelectorAll('.go-there-btn').forEach(btn => {
@@ -170,12 +174,34 @@
 
         // Event listener untuk tombol "Remove"
         document.querySelectorAll('.remove-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', async () => {
             const index = btn.getAttribute('data-index');
+            const bar = bars[index];
+            const placeId = bar.properties.place_id;
 
-            // Tampilkan tombol "Go There" dan sembunyikan "Remove"
-            btn.style.display = 'none';
-            document.querySelector(`.go-there-btn[data-index="${index}"]`).style.display = 'inline';
+            try {
+              const response = await fetch('/places/remove', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId,
+                  placeId,
+                }),
+              });
+
+              if (response.ok) {
+                console.log("Relationship successfully removed!");
+                // Tampilkan tombol "Go There" dan sembunyikan "Remove"
+                btn.style.display = 'none';
+                document.querySelector(`.go-there-btn[data-index="${index}"]`).style.display = 'inline';
+              } else {
+                console.error("Failed to remove relationship:", response.statusText);
+              }
+            } catch (error) {
+              console.error("Error removing relationship:", error);
+            }
           });
         });
 

@@ -2,7 +2,8 @@
   "watch": [
     "src",
     "routes",
-    "views"
+    "views",
+    "controllers"
   ],
   "ext": "js,ejs",
   "ignore": [

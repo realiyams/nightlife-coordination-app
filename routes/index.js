@@ -21,4 +21,8 @@ router.post('/places/remove', placesController.removePlace);
 
 // Rute untuk menangani POST request untuk "search"
 router.post('/user/updateCity', placesController.updateCity);
+
+// Rute untuk menangani POST request untuk mendapatkan city user
+router.get('/user/city', placesController.userCity);
+
 module.exports = router;

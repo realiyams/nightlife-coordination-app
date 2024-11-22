@@ -9,9 +9,6 @@ function getCookie(name) {
 const tokenInLocalStorage = localStorage.getItem('token');
 const tokenInCookie = getCookie('token'); // Assuming your cookie is named 'token'
 
-// console.log(tokenInLocalStorage)
-// console.log(tokenInCookie)
-
 if (!tokenInLocalStorage && tokenInCookie) {
   // No token in localStorage but found in cookie, save it to localStorage
   localStorage.setItem('token', tokenInCookie);
